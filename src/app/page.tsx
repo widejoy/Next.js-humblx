@@ -9,42 +9,14 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { actionTypes } from "@/utils/actionTypes";
+import Link from "next/link";
 import { useEffect, useState } from "react";
-
-const actionTypes: { id: string; label: string; inputLabel?: string }[] = [
-  { id: "alert", label: "Alert", inputLabel: "Enter Your Alert" },
-  { id: "showText", label: "Show Text", inputLabel: "Enter Text" },
-  { id: "showImage", label: "Show Image", inputLabel: "Enter Image URL" },
-  { id: "refreshPage", label: "Refresh Page" },
-  {
-    id: "setLocalStorage",
-    label: "Set LocalStorage",
-    inputLabel: "Enter Key:Value",
-  },
-  {
-    id: "getLocalStorage",
-    label: "Get LocalStorage",
-    inputLabel: "Enter Key",
-  },
-  { id: "increaseButtonSize", label: "Increase Button Size" },
-  { id: "closeWindow", label: "Close Window" },
-  {
-    id: "promptAndShow",
-    label: "Prompt and Show",
-    inputLabel: "Enter Prompt Message",
-  },
-  {
-    id: "changeButtonColor",
-    label: "Change Button Color",
-    inputLabel: "Enter Color (optional)",
-  },
-  { id: "disableButton", label: "Disable Button" },
-];
 
 export default function Home() {
   const [buttonLabel, setButtonLabel] = useState("");
   const [actions, setActions] = useState<
-    { id: string; type: string; label: string }[]
+    { id: string; type: string; label: string; value: string }[]
   >([]);
 
   useEffect(() => {
@@ -61,12 +33,23 @@ export default function Home() {
     if (!action) return;
     setActions((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), type: action.id, label: action.label },
+      {
+        id: crypto.randomUUID(),
+        type: action.id,
+        label: action.label,
+        value: "",
+      },
     ]);
   };
 
   const removeAction = (id: string) => {
     setActions((prev) => prev.filter((action) => action.id !== id));
+  };
+
+  const updateActionValue = (id: string, value: string) => {
+    setActions((prev) =>
+      prev.map((action) => (action.id === id ? { ...action, value } : action))
+    );
   };
 
   const saveData = () => {
@@ -105,12 +88,20 @@ export default function Home() {
             key={action.id}
             action={action}
             removeAction={removeAction}
+            updateActionValue={updateActionValue}
           />
         ))}
       </div>
+
       <Button className="mt-5" onClick={saveData}>
         Save Data
       </Button>
+      <Link
+        href={"/output"}
+        className="p-2 mt-5 bg-black text-white rounded-4xl"
+      >
+        Navigate to output page
+      </Link>
     </div>
   );
 }

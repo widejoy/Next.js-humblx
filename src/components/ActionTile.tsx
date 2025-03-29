@@ -1,42 +1,16 @@
+import { actionTypes } from "@/utils/actionTypes";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 export function ActionTile({
   action,
   removeAction,
+  updateActionValue,
 }: {
-  action: { id: string; type: string; label: string };
+  action: { id: string; type: string; label: string; value: string };
   removeAction: (id: string) => void;
+  updateActionValue: (id: string, value: string) => void;
 }) {
-  const actionTypes: { id: string; label: string; inputLabel?: string }[] = [
-    { id: "alert", label: "Alert", inputLabel: "Enter Your Alert" },
-    { id: "showText", label: "Show Text", inputLabel: "Enter Text" },
-    { id: "showImage", label: "Show Image", inputLabel: "Enter Image URL" },
-    { id: "refreshPage", label: "Refresh Page" },
-    {
-      id: "setLocalStorage",
-      label: "Set LocalStorage",
-      inputLabel: "Enter Key:Value",
-    },
-    {
-      id: "getLocalStorage",
-      label: "Get LocalStorage",
-      inputLabel: "Enter Key",
-    },
-    { id: "increaseButtonSize", label: "Increase Button Size" },
-    { id: "closeWindow", label: "Close Window" },
-    {
-      id: "promptAndShow",
-      label: "Prompt and Show",
-      inputLabel: "Enter Prompt Message",
-    },
-    {
-      id: "changeButtonColor",
-      label: "Change Button Color",
-      inputLabel: "Enter Color (optional)",
-    },
-    { id: "disableButton", label: "Disable Button" },
-  ];
   const actionType = actionTypes.find((a) => a.id === action.type);
 
   return (
@@ -54,7 +28,12 @@ export function ActionTile({
 
       {actionType?.inputLabel && (
         <div className="flex flex-col space-y-1">
-          <Input className="w-full" placeholder={actionType.inputLabel} />
+          <Input
+            className="w-full"
+            placeholder={actionType.inputLabel}
+            value={action.value}
+            onChange={(e) => updateActionValue(action.id, e.target.value)}
+          />
         </div>
       )}
     </div>
