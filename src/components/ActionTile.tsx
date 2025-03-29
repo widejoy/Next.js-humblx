@@ -14,9 +14,9 @@ export function ActionTile({
   const actionType = actionTypes.find((a) => a.id === action.type);
 
   return (
-    <div className="flex flex-col space-y-2 p-4 border rounded-lg bg-gray-100 w-[250px]">
+    <div className="w-full">
       <div className="flex justify-between items-center">
-        <span className="font-medium">{action.label}</span>
+        <div className="font-medium">{action.label}</div>
         <Button
           variant="destructive"
           size="icon"
@@ -27,7 +27,7 @@ export function ActionTile({
       </div>
 
       {actionType?.inputLabel && (
-        <div className="flex flex-col space-y-1">
+        <div className="flex flex-col space-y-1 mt-2">
           <Input
             className="w-full"
             placeholder={actionType.inputLabel}

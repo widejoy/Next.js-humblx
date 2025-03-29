@@ -11,7 +11,11 @@ import {
 } from "@/components/ui/select";
 import { actionTypes } from "@/utils/actionTypes";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+
+const ITEM_TYPE = "action-tile";
 
 export default function Home() {
   const [buttonLabel, setButtonLabel] = useState("");
@@ -52,6 +56,14 @@ export default function Home() {
     );
   };
 
+  const moveAction = (dragIndex: number, hoverIndex: number) => {
+    const draggedAction = actions[dragIndex];
+    const newActions = [...actions];
+    newActions.splice(dragIndex, 1);
+    newActions.splice(hoverIndex, 0, draggedAction);
+    setActions(newActions);
+  };
+
   const saveData = () => {
     localStorage.setItem(
       "configData",
@@ -61,47 +73,112 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center space-y-8 p-6">
-      <Input
-        className="w-[200px] mt-10"
-        placeholder="Enter Button Label"
-        value={buttonLabel}
-        onChange={(e) => setButtonLabel(e.target.value)}
-      />
+    <DndProvider backend={HTML5Backend}>
+      <div className="flex flex-col items-center space-y-8 p-6">
+        <Input
+          className="w-[200px] mt-10"
+          placeholder="Enter Button Label"
+          value={buttonLabel}
+          onChange={(e) => setButtonLabel(e.target.value)}
+        />
 
-      <Select onValueChange={addAction}>
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Add Action" />
-        </SelectTrigger>
-        <SelectContent>
-          {actionTypes.map((action) => (
-            <SelectItem key={action.id} value={action.id}>
-              {action.label}
-            </SelectItem>
+        <Select onValueChange={addAction}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Add Action" />
+          </SelectTrigger>
+          <SelectContent>
+            {actionTypes.map((action) => (
+              <SelectItem key={action.id} value={action.id}>
+                {action.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="w-[250px] space-y-2">
+          {actions.map((action, index) => (
+            <DraggableActionTile
+              key={action.id}
+              action={action}
+              removeAction={removeAction}
+              updateActionValue={updateActionValue}
+              index={index}
+              moveAction={moveAction}
+            />
           ))}
-        </SelectContent>
-      </Select>
+        </div>
 
-      <div className="w-[250px] space-y-2">
-        {actions.map((action) => (
-          <ActionTile
-            key={action.id}
-            action={action}
-            removeAction={removeAction}
-            updateActionValue={updateActionValue}
-          />
-        ))}
+        <Button className="mt-5" onClick={saveData}>
+          Save Data
+        </Button>
+        <Link
+          href={"/output"}
+          className="p-2 mt-5 bg-black text-white rounded-4xl"
+        >
+          Navigate to output page
+        </Link>
       </div>
+    </DndProvider>
+  );
+}
 
-      <Button className="mt-5" onClick={saveData}>
-        Save Data
-      </Button>
-      <Link
-        href={"/output"}
-        className="p-2 mt-5 bg-black text-white rounded-4xl"
-      >
-        Navigate to output page
-      </Link>
+function DraggableActionTile({
+  action,
+  removeAction,
+  updateActionValue,
+  index,
+  moveAction,
+}: {
+  action: { id: string; type: string; label: string; value: string };
+  removeAction: (id: string) => void;
+  updateActionValue: (id: string, value: string) => void;
+  index: number;
+  moveAction: (dragIndex: number, hoverIndex: number) => void;
+}) {
+  const ref = useRef(null);
+
+  const [{ isDragging }, drag] = useDrag({
+    type: ITEM_TYPE,
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [, drop] = useDrop({
+    accept: ITEM_TYPE,
+    hover: (item: { index: number }) => {
+      if (!ref.current) {
+        return;
+      }
+
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      moveAction(dragIndex, hoverIndex);
+
+      item.index = hoverIndex;
+    },
+  });
+
+  drag(drop(ref));
+
+  return (
+    <div
+      ref={ref}
+      className={`flex flex-col space-y-2 p-4 border rounded-lg bg-gray-100 w-[250px] cursor-move ${
+        isDragging ? "opacity-50" : ""
+      }`}
+    >
+      <ActionTile
+        action={action}
+        removeAction={removeAction}
+        updateActionValue={updateActionValue}
+      />
     </div>
   );
 }
